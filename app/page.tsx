@@ -67,8 +67,8 @@ export default function Home() {
         alert('Something went wrong. Please try again.')
         setStep('questions')
       }
-    } catch (err) {
-      alert('Error: ' + err.message)
+    } catch (err: unknown) {
+  alert('Error: ' + (err as Error).message)
       setStep('questions')
     }
     setLoading(false)
