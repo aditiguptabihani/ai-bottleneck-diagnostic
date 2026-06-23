@@ -49,7 +49,7 @@ export default function Home() {
     }
   }
 
-  const handleSubmit = async (finalAnswers) => {
+  const handleSubmit = async (finalAnswers: Record<string, string>) => {
     setStep('loading')
     setLoading(true)
     try {
