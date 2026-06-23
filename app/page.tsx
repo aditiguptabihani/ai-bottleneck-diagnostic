@@ -15,12 +15,23 @@ const questions = [
   { id: 'q10', text: 'If someone handed you one thing that would actually move you, what would it need to be?' }
 ]
 
+interface Diagnosis {
+  stated_blocker: string
+  behavioral_signals: string
+  contradiction_evidence: string
+  bottleneck_type: string
+  pattern_summary: string
+  diagnosis_sentence: string
+  predicted_fix_that_wont_work: string
+  why_fix_wont_work: string
+}
+
 export default function Home() {
   const [step, setStep] = useState('landing')
   const [currentQ, setCurrentQ] = useState(0)
-  const [answers, setAnswers] = useState({})
+  const [answers, setAnswers] = useState<Record<string, string>>({})
   const [currentAnswer, setCurrentAnswer] = useState('')
-  const [diagnosis, setDiagnosis] = useState(null)
+  const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null)
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
@@ -68,13 +79,13 @@ export default function Home() {
         setStep('questions')
       }
     } catch (err: unknown) {
-  alert('Error: ' + (err as Error).message)
+      alert('Error: ' + (err as Error).message)
       setStep('questions')
     }
     setLoading(false)
   }
 
-  const saveToDatabase = async (finalAnswers, diag) => {
+  const saveToDatabase = async (finalAnswers: Record<string, string>, diag: Diagnosis) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       const userId = user?.id || null
@@ -112,19 +123,20 @@ export default function Home() {
           })
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('DB save error:', err)
     }
   }
 
-  const handleReaction = async (reaction) => {
+  const handleReaction = async (reaction: string) => {
     try {
       await supabase
         .from('outcomes')
         .update({ reaction, recorded_at: new Date().toISOString() })
         .eq('reaction', 'pending')
       setStep('thankyou')
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error(err)
       setStep('thankyou')
     }
   }
@@ -205,28 +217,23 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
       <div className="max-w-lg w-full">
         <h2 className="text-2xl font-bold mb-8 text-center">Your Diagnosis</h2>
-
         <div className="bg-gray-900 rounded-xl p-6 mb-4">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Your Real Blocker</p>
           <p className="text-lg font-semibold text-white">{diagnosis.diagnosis_sentence}</p>
         </div>
-
         <div className="bg-gray-900 rounded-xl p-6 mb-4">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Pattern Detected</p>
           <p className="text-gray-300">{diagnosis.pattern_summary}</p>
         </div>
-
         <div className="bg-gray-900 rounded-xl p-6 mb-4">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">The Fix You Will Reach For</p>
           <p className="text-gray-300">{diagnosis.predicted_fix_that_wont_work}</p>
           <p className="text-red-400 text-sm mt-2">⚠ {diagnosis.why_fix_wont_work}</p>
         </div>
-
         <div className="bg-gray-900 rounded-xl p-6 mb-6">
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">What the Evidence Shows</p>
           <p className="text-gray-300 text-sm">{diagnosis.contradiction_evidence}</p>
         </div>
-
         <p className="text-center text-gray-400 mb-4">Did this land?</p>
         <div className="flex gap-3">
           <button
